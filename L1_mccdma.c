@@ -55,10 +55,18 @@ void fix_file_name(char* fileName, char* modulation, char* howManyTaps,
 void pn_generator(char* pnSequence, int len) {
 
 	//***Student_code_start*** 
-	//    Your code...
-	//    ...
-	//    ...
-	//***Student_code_end*****
+    int generatePoly[5] = {1,0,1,1,1};
+    int state[4] = {1,1,0,1} ;
+    int tmp = 0;
+	for(int i = 0; i<len; i++){
+        pnSequence[i] = state[0]%2;
+        tmp = (state[0]*generatePoly[0]+state[1]*generatePoly[1]+state[2]*generatePoly[2]+state[3]*generatePoly[3])%2;
+        for(int j = 0; j<3; j++){
+            state[3-j] = state[2-j];
+        }
+        state[0] = tmp;
+    }
+	//***Student_code_end***
 
 }
 
@@ -66,10 +74,17 @@ int generate_symbols_mccdma(unsigned char* txBits, int bitsPerSymbol,
         int howManySymbols, int spreadFactor, double* txSymI, double* txSymQ){
         
 	//***Student_code_start*** 
-	//    Your code...
-	//    ...
-	//    ...
-	//***Student_code_end*****
+	for(int i = 0; i < howManySymbols; i++){
+        for(int j = 0; j < spreadFactor; j++){
+            txSymI[spreadFactor*i+j] = (txBits[bitsPerSymbol*i]) ? 1 : -1;
+            txSymI[spreadFactor*i+j] *= SCALE_QPSK;
+
+            txSymQ[spreadFactor*i+j] = (txBits[bitsPerSymbol*i+1]) ? 1 : -1;
+            txSymQ[spreadFactor*i+j] *= SCALE_QPSK;
+        }
+    }
+    
+	//***Student_code_end***
 
     return 0;
 }
@@ -77,10 +92,11 @@ int generate_symbols_mccdma(unsigned char* txBits, int bitsPerSymbol,
 void spread_symbols(double* sigI, double* sigQ, char* pnSeq, int len) {
 
 	//***Student_code_start*** 
-	//    Your code...
-	//    ...
-	//    ...
-	//***Student_code_end*****
+	for(int i = 0; i < len; i++){
+        sigI[i] *= pnSeq[i];
+        sigQ[i] *= pnSeq[i];
+    }
+	//***Student_code_end***
 }
 
 void decode_symbols_mccdma(double* rxSymI, double* rxSymQ, int howManySymbols,
@@ -88,10 +104,18 @@ void decode_symbols_mccdma(double* rxSymI, double* rxSymQ, int howManySymbols,
         double sqrtSNR, unsigned char* rxBits) {
 
 	//***Student_code_start*** 
-	//    Your code...
-	//    ...
-	//    ...
-	//***Student_code_end*****
+    
+    for(int i = 0; i < howManySymbols; i++){
+        double SymI = 0;
+        double SymQ = 0;
+        for(int j = 0; j < spreadFactor; j++){
+            SymI += rxSymI[spreadFactor*i+j]/(sqrtSNR * SQRT_OF_2);
+            SymQ += rxSymQ[spreadFactor*i+j]/(sqrtSNR * SQRT_OF_2);
+        }
+        rxBits[bitsPerSymbol*i] = (SymI > 0) ? 1 : 0;
+        rxBits[bitsPerSymbol*i+1] = (SymQ > 0) ? 1 : 0;
+    }
+	//***Student_code_end***
 
 
 }
